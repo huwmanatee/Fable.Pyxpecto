@@ -54,7 +54,9 @@ module Assert =
                 s
                 diffs
 
-        let private printVerses (firstName: string) first (secondName: string) second =
+        /// Renders `first` and `second` under their names with the differing regions highlighted.
+        /// Exposed so `Expect` can build the same "expected vs actual" block for its own assertions.
+        let printVerses (firstName: string) first (secondName: string) second =
             let first, second =
                 match box first, box second with
                 | (:? string as f), (:? string as s) -> string f, string s

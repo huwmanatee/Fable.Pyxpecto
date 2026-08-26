@@ -50,8 +50,15 @@ let tests_basic = testList "Basic" [
             let actual = Error "fails"
             Expect.isOk actual "Should fail"
             Expect.equal true false "Should not be tested"
+        // Fable.Mocha formats the payload with `%A` inside quotes of its own, so on the JavaScript
+        // branch the error text comes back double quoted.
+        #if FABLE_COMPILER_JAVASCRIPT
+        let expected = "Should fail. Expected Ok, was Error(\"\"fails\"\")."
+        #else
+        let expected = "Should fail. Expected Ok, was Error(\"fails\")."
+        #endif
         let catch (exn: System.Exception) =
-            Expect.equal exn.Message "Should fail. Expected Ok, was Error(\"fails\")." "Error messages should be the same"
+            Expect.equal exn.Message expected "Error messages should be the same"
         Expect.throwsC case catch
 
     testCase "isEmpty works correctly" <| fun _ ->

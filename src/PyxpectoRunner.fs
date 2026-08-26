@@ -93,6 +93,10 @@ module Pyxpecto =
                 if not this.Config.Silent then
                     System.Console.WriteLine(sprintf "🚧 skipping '%s' ... pending" name)
 
+            member private this.printSkipIgnoredMsg (name: string) (reason: string) =
+                if not this.Config.Silent then
+                    System.Console.WriteLine(sprintf "🚧 skipping '%s' ... %s" name reason)
+
             member this.RunTest(test: FlatTest) =
                 let name = test.fullname
 
@@ -103,6 +107,8 @@ module Pyxpecto =
                             body ()
                             this.printSuccessMsg name None
                         with
+                        | :? IgnoreException as exn ->
+                            this.SkipIgnoredTest(name, exn.Message)
                         | :? AssertException as exn ->
                             this.printErrorMsg name exn.Message false
                         | e ->
@@ -115,11 +121,18 @@ module Pyxpecto =
                             stopwatch.Stop ()
                             this.printSuccessMsg name (Some stopwatch.Elapsed)
                         with
+                        | :? IgnoreException as exn ->
+                            this.SkipIgnoredTest(name, exn.Message)
                         | :? AssertException as exn ->
                             this.printErrorMsg name exn.Message false
                         | e ->
                             this.printErrorMsg name e.Message true
                 }
+
+            /// Reports a test that called `skiptest` while running as ignored.
+            member this.SkipIgnoredTest(name, reason) =
+                this.IgnoredTests.Value <- this.IgnoredTests.Value + 1
+                this.printSkipIgnoredMsg name reason
 
             member this.SkipPendingTest(name) =
                 this.IgnoredTests.Value <- this.IgnoredTests.Value + 1

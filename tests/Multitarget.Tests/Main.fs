@@ -416,6 +416,7 @@ let all =
         nestedTestCase
         equalityTestCases
         pendingListTestCases
+        ParityTests.all
         //focusedTestCases
         //errorTestCases
         //failedTestCases

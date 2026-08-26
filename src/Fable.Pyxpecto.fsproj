@@ -50,7 +50,7 @@
 
   <PropertyGroup>
     <PythonDependencies>
-      <Package Name="fable-library" Version="&gt;= 5.0.0a17 &lt; 6.0.0" ResolutionStrategy="Max" />
+      <Package Name="fable-library" Version="&gt;= 5.15.0 &lt; 6.0.0" ResolutionStrategy="Max" />
     </PythonDependencies>
   </PropertyGroup>
 </Project>

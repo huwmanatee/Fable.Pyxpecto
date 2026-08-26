@@ -22,6 +22,25 @@ module Test =
         | TestList(name, tests, focused) -> TestListSequential(name, tests, focused)
         | TestListSequential(name, tests, focused) -> TestListSequential(name, tests, focused)
 
+    /// Test case or list needs to run sequenced with the other tests in this group.
+    /// Pyxpecto runs every test one after another, so the group name is documentation only.
+    let testSequencedGroup (_groupName: string) test = testSequenced test
+
+    /// Fails the currently running test.
+    let inline failtest msg = Helper.failtest msg
+    /// Fails the currently running test.
+    let inline failtestf fmt = Printf.ksprintf Helper.failtest fmt
+    /// Fails the currently running test. Behaves like `failtest`; Pyxpecto never attaches a stack
+    /// trace to assertion failures.
+    let inline failtestNoStack msg = Helper.failtestNoStack msg
+    /// Fails the currently running test. Behaves like `failtestf`; Pyxpecto never attaches a stack
+    /// trace to assertion failures.
+    let inline failtestNoStackf fmt = Printf.ksprintf Helper.failtestNoStack fmt
+    /// Skips the currently running test, reporting it as ignored.
+    let inline skiptest msg = Helper.skiptest msg
+    /// Skips the currently running test, reporting it as ignored.
+    let inline skiptestf fmt = Printf.ksprintf Helper.skiptest fmt
+
     /// Test case computation expression builder
     type TestCaseBuilder(name: string, focusState: FocusState) =
         member _.Zero() = ()
@@ -69,3 +88,63 @@ module Test =
     let inline ftestAsync name = TestAsyncBuilder(name, Focused)
     /// Builds an async test case that will be ignored
     let inline ptestAsync name = TestAsyncBuilder(name, Pending)
+
+    /// Names a theory case for its test. Strings are quoted so an empty case stays visible.
+    let private stringify (value: 'a) =
+        match box value with
+        | null -> "null"
+        | :? string as s -> "\"" + s + "\""
+        | boxed -> string boxed
+
+    /// Applies `setup` to a list of named partial tests to build test cases.
+    /// `setup partialTest` is applied when the test runs, not when the list is built, so a setup
+    /// that throws is reported against its own test. The eta expansion is also what keeps Fable's
+    /// Python output from mis-currying the two-step application.
+    let testFixture setup namedPartialTests =
+        namedPartialTests
+        |> Seq.map (fun (name, partialTest) -> testCase name (fun () -> setup partialTest ()))
+        |> List.ofSeq
+
+    /// Applies `setupAsync` to a list of named partial tests to build async test cases.
+    let testFixtureAsync setupAsync namedPartialTests =
+        namedPartialTests
+        |> Seq.map (fun (name, partialTest) -> testCaseAsync name (setupAsync partialTest))
+        |> List.ofSeq
+
+    /// Applies `param` to a list of named partial tests.
+    let testParam param namedPartialTests =
+        namedPartialTests
+        |> Seq.map (fun (name, partialTest) -> testCase name (fun () -> partialTest param ()))
+        |> List.ofSeq
+
+    /// Applies `param` to a list of named partial async tests.
+    let testParamAsync param namedPartialTests =
+        namedPartialTests
+        |> Seq.map (fun (name, partialTest) -> testCaseAsync name (partialTest param))
+        |> List.ofSeq
+
+    let private theory listCtor caseCtor name cases test =
+        cases
+        |> Seq.map (fun case -> caseCtor (stringify case) (fun () -> test case |> ignore))
+        |> List.ofSeq
+        |> listCtor name
+
+    /// Builds one test case per entry in `cases`, named after the case.
+    let testTheory name cases test = theory testList testCase name cases test
+    /// Builds a theory whose cases will ignore other unfocused tests.
+    let ftestTheory name cases test = theory ftestList ftestCase name cases test
+    /// Builds a theory whose cases will be ignored.
+    let ptestTheory name cases test = theory ptestList ptestCase name cases test
+
+    let private theoryAsync listCtor caseCtor name cases test =
+        cases
+        |> Seq.map (fun case -> caseCtor (stringify case) (async { do! test case }))
+        |> List.ofSeq
+        |> listCtor name
+
+    /// Builds one async test case per entry in `cases`, named after the case.
+    let testTheoryAsync name cases test = theoryAsync testList testCaseAsync name cases test
+    /// Builds an async theory whose cases will ignore other unfocused tests.
+    let ftestTheoryAsync name cases test = theoryAsync ftestList ftestCaseAsync name cases test
+    /// Builds an async theory whose cases will be ignored.
+    let ptestTheoryAsync name cases test = theoryAsync ptestList ptestCaseAsync name cases test

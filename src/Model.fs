@@ -34,6 +34,11 @@ module Model =
     type AssertException(msg) =
         inherit Exception(msg)
 
+    /// Raised by `skiptest`/`skiptestf` to ignore a test while it is already running.
+    /// The runner reports it as ignored rather than failed.
+    type IgnoreException(msg) =
+        inherit Exception(msg)
+
     type TestCode =
         | Sync of stest: (unit -> unit)
         | Async of atest: Async<unit>
@@ -77,3 +82,15 @@ module Helper =
 
     let inline failtest msg = raise <| AssertException msg
     let inline failtestf fmt = Printf.ksprintf failtest fmt
+
+    /// Fails the test. Kept for Expecto compatibility; Pyxpecto never attaches a stack trace
+    /// to assertion failures, so this behaves exactly like `failtest`.
+    let inline failtestNoStack msg = raise <| AssertException msg
+    /// Fails the test. Kept for Expecto compatibility; Pyxpecto never attaches a stack trace
+    /// to assertion failures, so this behaves exactly like `failtestf`.
+    let inline failtestNoStackf fmt = Printf.ksprintf failtestNoStack fmt
+
+    /// Skips the currently running test, reporting it as ignored.
+    let inline skiptest msg = raise <| IgnoreException msg
+    /// Skips the currently running test, reporting it as ignored.
+    let inline skiptestf fmt = Printf.ksprintf (IgnoreException >> raise) fmt

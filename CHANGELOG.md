@@ -16,6 +16,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.1.0 - 2026-08-26
+
+### ✨ Added
+
+Expecto parity for the assertions and test constructors that can be expressed on every Fable target.
+
+- `Expect`: `throwsT`, `throwsAsync`, `throwsAsyncC`, `throwsAsyncT`.
+- `Expect`: `isChoice1Of2`, `isChoice2Of2`.
+- `Expect`: `isLessThan`, `isLessThanOrEqual`, `isGreaterThan`, `isGreaterThanOrEqual`.
+- `Expect`: `floatEqual`, `isNaN`, `isInfinity`, `isPositiveInfinity`, `isNegativeInfinity`,
+  `isNotPositiveInfinity`, `isNotNegativeInfinity`.
+- `Expect`: `stringStarts`, `stringEnds`, `stringHasLength`, `isNotWhitespace`.
+- `Expect`: `isMatch`, `isRegexMatch`, `isNotMatch`, `isNotRegexMatch`, `isMatchGroups`,
+  `isMatchRegexGroups`.
+- `Expect`: `hasCountOf`, `allEqual`, `contains`, `distribution`, `sequenceEqual`, `sequenceStarts`,
+  `sequenceContainsOrder`, `isAscending`, `isDescending`.
+- Test DSL: `testTheory`, `ftestTheory`, `ptestTheory` and their `*Async` counterparts.
+- Test DSL: `testFixture`, `testFixtureAsync`, `testParam`, `testParamAsync`, `testSequencedGroup`.
+- Test DSL: `failtest`, `failtestf`, `failtestNoStack`, `failtestNoStackf`, `skiptest`, `skiptestf`
+  are now available without qualifying `Helper`.
+- `skiptest`/`skiptestf` skip a test that is already running; the runner reports it as ignored and
+  prints the reason.
+- `Assert.NET.printVerses` is public so `Expect` can build the same expected/actual block.
+
+Intentionally not ported, because they cannot be expressed faithfully on all targets:
+`isCase`/`wantCase` (quotations and reflection), `streamsEqual` (`System.IO.Stream`), `isFasterThan`
+(Expecto's performance harness), `isNullValue`/`isNotNullValue` (`System.Nullable`), the `float32`
+variants (`*f`, `float32Close`), and the `Task`-based builders.
+
+### 🔄 Changed
+
+- Updated to Fable 5.15, `Fable.Core` 5.2.0 and `Fable.Python` 5.4.0.
+- Updated `Microsoft.NET.Test.Sdk`, `Expecto`, `YoloDev.Expecto.TestSdk`, FAKE and femto.
+- Build and test projects now target .NET 10.
+- Bumped `mocha` to 11 and `tsx` to 4.23; mocha 10 fails to load under Node 26.
+
 ## 2.0.0 - 2025-12-09
 
 ### 🔄 Changed

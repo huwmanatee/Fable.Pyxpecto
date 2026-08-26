@@ -18,6 +18,7 @@ Fable.Pyxpecto can be used to run tests in **Python**, **JavaScript**, **TypeScr
 - [Fable.Pyxpecto](#fablepyxpecto)
   - [Features](#features)
     - [Reuse Expecto/Fable.Mocha Tests](#reuse-expectofablemocha-tests)
+    - [Expecto parity](#expecto-parity)
     - [Pending](#pending)
     - [Focused](#focused)
     - [Sequential Tests](#sequential-tests)
@@ -56,6 +57,50 @@ let tests_basic = testList "Basic" [
 
 
 ```
+
+### Expecto parity
+
+`Expect` and the test DSL cover the parts of Expecto's API that can be expressed on every Fable
+target, so most Expecto suites compile unchanged:
+
+- assertions: `throws`, `throwsC`, `throwsT`, `throwsAsync`, `throwsAsyncC`, `throwsAsyncT`,
+  `isChoice1Of2`, `isChoice2Of2`, `isLessThan`, `isLessThanOrEqual`, `isGreaterThan`,
+  `isGreaterThanOrEqual`, `floatEqual`, `floatClose`, `floatLessThanOrClose`,
+  `floatGreaterThanOrClose`, `isNaN`, `isNotNaN`, `isInfinity`, `isPositiveInfinity`,
+  `isNegativeInfinity`, `isNotInfinity`, `isNotPositiveInfinity`, `isNotNegativeInfinity`,
+  `stringContains`, `stringStarts`, `stringEnds`, `stringHasLength`, `isNotWhitespace`, `isMatch`,
+  `isRegexMatch`, `isNotMatch`, `isNotRegexMatch`, `isMatchGroups`, `isMatchRegexGroups`,
+  `hasLength`, `hasCountOf`, `all`, `allEqual`, `exists`, `contains`, `containsAll`, `distribution`,
+  `sequenceEqual`, `sequenceStarts`, `sequenceContainsOrder`, `isAscending`, `isDescending`.
+- test constructors: `testTheory`, `ftestTheory`, `ptestTheory`, `testTheoryAsync`,
+  `ftestTheoryAsync`, `ptestTheoryAsync`, `testFixture`, `testFixtureAsync`, `testParam`,
+  `testParamAsync`, `testSequenced`, `testSequencedGroup`.
+- failure helpers, unqualified: `failtest`, `failtestf`, `failtestNoStack`, `failtestNoStackf`,
+  `skiptest`, `skiptestf`.
+
+`skiptest` skips a test that has already started; the runner reports it as ignored and prints the
+reason next to the test name.
+
+```fsharp
+testCase "not ready yet" <| fun _ ->
+    skiptest "waiting on the upstream fix"
+
+testTheory "is positive" [ 1; 2; 3 ] <| fun x ->
+    Expect.isGreaterThan x 0 "should be positive"
+```
+
+Deliberately missing, because they cannot be honoured on every target: `isCase`/`wantCase`
+(quotations and reflection), `streamsEqual` (`System.IO.Stream`), `isFasterThan` (Expecto's
+performance harness), `isNullValue`/`isNotNullValue` (`System.Nullable`), the `float32` variants
+(`*f`, `float32Close`) and the `Task`-based builders. `Suspect` keeps the Pyxpecto-only helpers.
+
+Two constructors differ from Expecto on purpose:
+
+- `testFixture`, `testFixtureAsync`, `testParam`, `testParamAsync` and the theory builders return a
+  `TestCase list` rather than a sequence, so they can be handed straight to `testList`.
+- `testSequencedGroup` takes the group name for source compatibility, but Pyxpecto runs every test
+  one after another anyway, so the name is documentation only.
+
 ### Pending
 
 Pending tests will not be run, but displayed as "skipped".
@@ -233,12 +278,14 @@ let main argv =
 
 - [uv](https://docs.astral.sh/uv/getting-started/installation/)
   - check with `uv --version` (Tested with `0.9.13`)
+  - only the `build.sh`/`build.cmd` Python targets need it; without `uv` you can run the Python
+    tests from a plain virtualenv holding `fable-library` (see `pyproject.toml` for the version)
 - [Dotnet SDK](https://dotnet.microsoft.com/en-us/download)
-  - check with `dotnet --version` (Tested with `7.0.306`)
+  - check with `dotnet --version` (Tested with `10.0.111`)
 - Node
-  - check with `node --version` (Tested with `v22`)
+  - check with `node --version` (Tested with `v26`)
 - npm
-  - check with `npm --version` (Tested with `11.6`)
+  - check with `npm --version` (Tested with `12.0`)
 
 ### Setup
 
