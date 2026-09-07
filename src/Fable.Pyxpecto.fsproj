@@ -29,18 +29,21 @@
     <None Include="../README.md" Pack="true" PackagePath="\" />
     <Compile Include="Prelude.fs" />
     <Compile Include="Model.fs" />
-    <Compile Include="Assert.fs" />
+    <Compile Include="Assertion.fs" />
     <Compile Include="CommandLine.fs" />
     <Compile Include="TestDsl.fs" />
     <Compile Include="Expect.fs" />
     <Compile Include="Suspect.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="PyxpectoRunner.fs" />
+    <!-- Last: its AutoOpen `!!` must not shadow TranspilerHelper's inside this library. -->
+    <Compile Include="Interop.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Fable.Core" />
-    <PackageReference Include="Fable.Python" />
+    <!-- Python-only: compiling it for another Fable target fails on Fable.Python's own sources. -->
+    <PackageReference Include="Fable.Python" Condition="'$(FABLE_COMPILER_PYTHON)' == 'true'" />
     <PackageReference Include="FSharp.Core" />
   </ItemGroup>
 

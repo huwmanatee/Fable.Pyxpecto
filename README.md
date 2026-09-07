@@ -18,6 +18,7 @@ Fable.Pyxpecto can be used to run tests in **Python**, **JavaScript**, **TypeScr
 - [Fable.Pyxpecto](#fablepyxpecto)
   - [Features](#features)
     - [Reuse Expecto/Fable.Mocha Tests](#reuse-expectofablemocha-tests)
+    - [Sharing a suite with .NET Expecto](#sharing-a-suite-with-net-expecto)
     - [Expecto parity](#expecto-parity)
     - [Pending](#pending)
     - [Focused](#focused)
@@ -57,6 +58,34 @@ let tests_basic = testList "Basic" [
 
 
 ```
+
+### Sharing a suite with .NET Expecto
+
+`open Fable.Pyxpecto` brings in an `[<Erase>]`d `[<Tests>]` attribute for Fable targets and a
+cross-target `!!` operator, so one source tree can run on .NET Expecto and all three Fable
+targets with no glue beyond the `open` that selects the DSL:
+
+```fsharp
+#if !FABLE_COMPILER
+open Expecto
+#else
+open Fable.Pyxpecto
+#endif
+
+[<Tests>]
+let tests = testList "MyModule" [ testCase "adds" <| fun () -> Expect.equal (1 + 1) 2 "sum" ]
+
+[<EntryPoint>]
+let main argv =
+#if !FABLE_COMPILER
+    Expecto.Tests.runTestsWithCLIArgs [] argv all
+#else
+    !! Pyxpecto.runTests [||] all
+#endif
+```
+
+See [docs/multi-target-testing.md](docs/multi-target-testing.md) for the project file, the
+per-target run commands and the cross-target gotchas.
 
 ### Expecto parity
 
@@ -167,10 +196,12 @@ These can also be given via:
 ```fsharp
 [<EntryPoint>]
 let main argv =
-    !!Pyxpecto.runTests [|
-        ConfigArg.FailOnFocused
-        ConfigArg.Silent
-    |] all
+    !!(Pyxpecto.runTests
+        [|
+            ConfigArg.FailOnFocused
+            ConfigArg.Silent
+        |]
+        all)
 ```
 
 ## Install
@@ -201,7 +232,7 @@ open Fable.Core.JsInterop
 #endif
 
 [<EntryPoint>]
-let main argv = !!Pyxpecto.runTests [||] all
+let main argv = !!(Pyxpecto.runTests [||] all)
 ```
 
 Then run it using:

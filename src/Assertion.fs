@@ -76,8 +76,12 @@ module Assert =
             let diffs = allDiffs first second
             String.Concat(highlightAllGreen diffs first, highlightAllRed diffs second)
 
-        let private stringEquals diffPrinter actual expected message =
-            match firstDiff actual expected with
+        /// Both parameters are annotated `string` and converted explicitly rather than
+        /// leaning on F#'s `string :> seq<char>`. That coercion makes the helper generic over
+        /// `seq<'b>` through `firstDiff`, and a backend whose native string is not a sequence
+        /// of characters cannot satisfy the constraint.
+        let private stringEquals diffPrinter (actual: string) (expected: string) message =
+            match firstDiff (actual.ToCharArray()) (expected.ToCharArray()) with
             | _, None, None -> ()
             | i, Some a, Some e ->
                 failtestf "%s. String does not match at position %i. Expected char: %A, but got %A.%s" message i e a (diffPrinter expected actual)
@@ -104,14 +108,14 @@ module Assert =
                 failtestf "%s.Actual value was equal to %A but had expected them to be non-equal.%s" message actual (printVersesDiff expected actual)
 
     let AreEqual(actual, expected, msg) =
-        #if FABLE_COMPILER
+        #if FABLE_COMPILER_PYTHON || FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
         Assert.AreEqual(actual, expected, msg)
         #else
         NET.equal actual expected msg
         #endif
 
     let NotEqual(actual, expected, msg) =
-        #if FABLE_COMPILER
+        #if FABLE_COMPILER_PYTHON || FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
         Assert.NotEqual(actual, expected, msg)
         #else
         NET.notEqual actual expected msg

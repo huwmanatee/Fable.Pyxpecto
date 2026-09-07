@@ -357,7 +357,7 @@ let focusedTestCases =
     ]
 
 let createJsDivideBy0Error () = 
-    #if FABLE_COMPILER && !FABLE_COMPILER_PYTHON
+    #if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
     5n / 0n
     #else
     5 / 0
@@ -422,15 +422,8 @@ let all =
         //failedTestCases
     ]
 
-// This is possibly the most magic used to make this work. 
-// Js and ts cannot use `Async.RunSynchronously`, instead they use `Async.StartAsPromise`.
-// Here we need the transpiler not to worry about the output type.
-#if !FABLE_COMPILER_JAVASCRIPT && !FABLE_COMPILER_TYPESCRIPT
-let (!!) (any: 'a) = any
-#endif
-#if FABLE_COMPILER_JAVASCRIPT || FABLE_COMPILER_TYPESCRIPT
-open Fable.Core.JsInterop
-#endif
-
+// `!!` comes from Fable.Pyxpecto's AutoOpen `Interop` module. JavaScript and TypeScript end
+// `runTests` in `Async.StartAsPromise` and everything else in `Async.RunSynchronously`, so the
+// operator is a JsInterop cast on the first two targets and the identity function on the rest.
 [<EntryPoint>]
-let main argv = !!Pyxpecto.runTests [||] all
+let main argv = !!(Pyxpecto.runTests [||] all)

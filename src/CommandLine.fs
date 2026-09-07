@@ -33,6 +33,17 @@ module CommandLine =
         let exitWith (exitCode: int): unit = Environment.Exit(exitCode)
     #endif
 
+    /// Used on a Fable target this library has no host bindings for yet. Without it the
+    /// `#if` chains below collapse to empty function bodies and the file stops parsing,
+    /// so an unsupported target fails with a syntax error in an unrelated file instead
+    /// of degrading to "no arguments, no exit code".
+    module Fallback =
+        let getArgs (): string[] = [||]
+
+        /// There is no portable way to set an exit code on an unknown host, so the run
+        /// reports its result and returns normally instead.
+        let exitWith (exitCode: int): unit = ignore exitCode
+
     let getArguments (): string[] =
         let args =
             #if FABLE_COMPILER_PYTHON
@@ -43,6 +54,10 @@ module CommandLine =
             #endif
             #if !FABLE_COMPILER
             NET.getArgs ()
+            #else
+            #if !FABLE_COMPILER_PYTHON && !FABLE_COMPILER_JAVASCRIPT && !FABLE_COMPILER_TYPESCRIPT
+            Fallback.getArgs ()
+            #endif
             #endif
 
         args
@@ -56,4 +71,8 @@ module CommandLine =
         #endif
         #if !FABLE_COMPILER
         NET.exitWith (exitCode)
+        #else
+        #if !FABLE_COMPILER_PYTHON && !FABLE_COMPILER_JAVASCRIPT && !FABLE_COMPILER_TYPESCRIPT
+        Fallback.exitWith (exitCode)
+        #endif
         #endif

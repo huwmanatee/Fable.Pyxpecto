@@ -16,6 +16,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 2.2.0 - 2026-08-26
+
+### ✨ Added
+
+Everything a shared .NET Expecto / Fable.Pyxpecto suite needed a separate glue package for is now
+in the library, under the AutoOpen `Interop` module that `open Fable.Pyxpecto` already brings in.
+
+- An erased `[<Tests>]` attribute for Fable targets, so the discovery annotation Expecto owns on
+  .NET can stay in shared source. It is defined only under `FABLE_COMPILER`, leaving Expecto's
+  attribute unambiguous on .NET, and carries `[<Erase>]` so nothing reaches the generated
+  JavaScript, TypeScript or Python.
+- A cross-target `!!` operator for `Pyxpecto.runTests`, which returns a promise on JavaScript and
+  TypeScript but the exit code elsewhere. `!! Pyxpecto.runTests args tests` now type checks as an
+  `[<EntryPoint>]` body on every target without hand-rolled per-project shims.
+
+See `docs/multi-target-testing.md` for the whole integration.
+
+### 🐛 Fixed
+
+- `CommandLine.getArguments`, `CommandLine.exitWith` and `Language.get` were chains of positive
+  `#if`s with no fallback arm. Under any Fable target other than the four known ones every branch
+  disappeared, the function bodies became empty and the library stopped *parsing*. They now fall
+  back to an explicit `Fallback` module and a `Language.Other` case, so an unsupported target
+  degrades to "no arguments, no exit code" instead of failing to compile.
+- `Assertion.stringEquals` no longer relies on `string :> seq<char>`, which left the helper
+  generic over `seq<'b>` in the generated code.
+- Dropped `[<AttachMembers>]` from `Model.FlatTest`; it is a JavaScript/TypeScript ergonomic that
+  can break the static `create` member elsewhere.
+
+### 🔧 Changed
+
+- `src/Assert.fs` is now `src/Assertion.fs`. `assert` is a reserved word on some backends, and
+  Fable derives import aliases from the file name.
+- The `Fable.Python` package reference is now conditional on `FABLE_COMPILER_PYTHON`. Nothing in
+  the library uses the `Fable.Python` namespace — `PyInterop` comes from `Fable.Core` — and
+  compiling it for a non-Python target failed on Fable.Python's own sources. It is consequently no
+  longer a declared dependency of the NuGet package; projects that used it transitively should
+  reference it directly.
+- The documented `[<EntryPoint>]` shape is now `!!(Pyxpecto.runTests [||] all)`. Without the
+  parentheses `!!` binds to the function rather than its result, which is harmless where `!!` is
+  erased or the identity but emits a bogus cast on a statically typed backend.
+
 ## 2.1.0 - 2026-08-26
 
 ### ✨ Added

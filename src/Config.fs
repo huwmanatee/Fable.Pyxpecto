@@ -5,6 +5,8 @@ type Language =
     | Python
     | NET
     | JavaScript
+    /// A Fable target this library has no host bindings for yet.
+    | Other
 
     static member get () =
         #if FABLE_COMPILER_JAVASCRIPT
@@ -18,6 +20,10 @@ type Language =
         #endif
         #if !FABLE_COMPILER
         Language.NET
+        #else
+        #if !FABLE_COMPILER_PYTHON && !FABLE_COMPILER_JAVASCRIPT && !FABLE_COMPILER_TYPESCRIPT
+        Language.Other
+        #endif
         #endif
 
     member this.AsLowerCaseString = (string this).ToLower()

@@ -345,6 +345,12 @@ let sequencedGroupTests =
             testCase "runs its tests" <| fun _ -> Expect.isTrue true "runs"
         ])
 
+// Proves the erased `[<Tests>]` attribute resolves on Fable targets and leaves nothing behind
+// in the generated output. On .NET the attribute belongs to Expecto, which this project does
+// not reference, so the annotation is conditional.
+#if FABLE_COMPILER
+[<Tests>]
+#endif
 let all =
     testList "Expecto parity" [
         throwsTests

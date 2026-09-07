@@ -47,7 +47,8 @@ module Model =
         | Sequential
         | Parallel
 
-    [<AttachMembers>]
+    // No [<AttachMembers>]: it is a JavaScript/TypeScript ergonomic, and on a backend that
+    // emits real classes it can drop `static` from `create`, which then cannot be called.
     type FlatTest =
         {
             name: string list
